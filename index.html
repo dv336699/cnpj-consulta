@@ -6,7 +6,7 @@
     <title>Consulta CNPJ — dados públicos da Receita Federal</title>
     <meta
       name="description"
-      content="Consulte CNPJ e busque empresas por razão social de forma rápida, limpa e sem anúncios. Dados públicos via cnpj.pw."
+      content="Consulte CNPJ de forma rápida, limpa e sem anúncios. Dados públicos via cnpj.pw."
     />
     <meta name="color-scheme" content="light dark" />
     <meta name="theme-color" content="#2563eb" />
@@ -110,152 +110,54 @@
     </header>
 
     <main>
-      <section class="wrap hero">
-        <h1 class="hero__title">Consulte qualquer empresa do Brasil</h1>
-        <p class="hero__subtitle">
-          Busque por CNPJ ou razão social e veja os dados cadastrais completos,
-          direto da base pública da Receita Federal.
-        </p>
+      <section class="wrap lookup">
+        <h1 class="sr-only">Consulta CNPJ — dados públicos da Receita Federal</h1>
 
-        <div class="tabs" role="tablist" aria-label="Modo de consulta">
-          <button
-            type="button"
-            class="tab"
-            id="tab-cnpj"
-            role="tab"
-            aria-selected="true"
-            aria-controls="panel-cnpj"
-          >
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <rect
-                x="3.5"
-                y="4.5"
-                width="17"
-                height="15"
-                rx="2"
-                stroke="currentColor"
-                stroke-width="1.8"
+        <form class="search" id="cnpj-form" novalidate>
+          <div class="search__row">
+            <div class="field">
+              <label class="sr-only" for="cnpj-input">Número do CNPJ</label>
+              <input
+                class="input"
+                id="cnpj-input"
+                type="text"
+                inputmode="numeric"
+                autocomplete="off"
+                spellcheck="false"
+                placeholder="00.000.000/0000-00"
+                maxlength="18"
+                autofocus
+                aria-describedby="cnpj-error"
               />
-              <path
-                d="M7 9h6M7 13h10M7 16.5h4"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-              />
-            </svg>
-            Consultar CNPJ
-          </button>
-          <button
-            type="button"
-            class="tab"
-            id="tab-name"
-            role="tab"
-            aria-selected="false"
-            aria-controls="panel-name"
-          >
-            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-              <circle cx="10.5" cy="10.5" r="6" stroke="currentColor" stroke-width="1.8" />
-              <line
-                x1="15"
-                y1="15"
-                x2="20"
-                y2="20"
-                stroke="currentColor"
-                stroke-width="1.8"
-                stroke-linecap="round"
-              />
-            </svg>
-            Buscar por nome
-          </button>
-        </div>
-      </section>
-
-      <section class="wrap">
-        <!-- Mode A: CNPJ lookup -->
-        <div
-          class="panel"
-          id="panel-cnpj"
-          role="tabpanel"
-          aria-labelledby="tab-cnpj"
-        >
-          <form class="search" id="cnpj-form" novalidate>
-            <div class="search__row">
-              <div class="field">
-                <label class="sr-only" for="cnpj-input">Número do CNPJ</label>
-                <input
-                  class="input"
-                  id="cnpj-input"
-                  type="text"
-                  inputmode="numeric"
-                  autocomplete="off"
-                  spellcheck="false"
-                  placeholder="00.000.000/0000-00"
-                  maxlength="18"
-                  aria-describedby="cnpj-error"
-                />
-              </div>
-              <button class="btn" type="submit" id="cnpj-submit">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="10.5" cy="10.5" r="6" stroke="currentColor" stroke-width="2" />
-                  <line
-                    x1="15"
-                    y1="15"
-                    x2="20"
-                    y2="20"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                  />
-                </svg>
-                Consultar
-              </button>
             </div>
-            <p class="field-error" id="cnpj-error" aria-live="polite"></p>
-          </form>
-        </div>
-
-        <!-- Mode B: name search -->
-        <div
-          class="panel"
-          id="panel-name"
-          role="tabpanel"
-          aria-labelledby="tab-name"
-          hidden
-        >
-          <form class="search" id="name-form" novalidate>
-            <div class="search__row">
-              <div class="field">
-                <label class="sr-only" for="name-input">Razão social</label>
-                <input
-                  class="input"
-                  id="name-input"
-                  type="text"
-                  autocomplete="off"
-                  spellcheck="false"
-                  placeholder="Ex.: Banco do Brasil"
-                  maxlength="120"
-                  aria-describedby="name-error"
+            <button class="btn" type="submit" id="cnpj-submit">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                <circle cx="10.5" cy="10.5" r="6" stroke="currentColor" stroke-width="2" />
+                <line
+                  x1="15"
+                  y1="15"
+                  x2="20"
+                  y2="20"
+                  stroke="currentColor"
+                  stroke-width="2"
+                  stroke-linecap="round"
                 />
-              </div>
-              <button class="btn" type="submit" id="name-submit">
-                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
-                  <circle cx="10.5" cy="10.5" r="6" stroke="currentColor" stroke-width="2" />
-                  <line
-                    x1="15"
-                    y1="15"
-                    x2="20"
-                    y2="20"
-                    stroke="currentColor"
-                    stroke-width="2"
-                    stroke-linecap="round"
-                  />
-                </svg>
-                Buscar
-              </button>
-            </div>
-            <p class="field-error" id="name-error" aria-live="polite"></p>
-          </form>
-        </div>
+              </svg>
+              Consultar
+            </button>
+          </div>
+          <p class="field-error" id="cnpj-error" aria-live="polite"></p>
+        </form>
+
+        <section class="recent" id="recent" aria-label="Consultas recentes" hidden>
+          <div class="recent__head">
+            <h2 class="recent__title">Consultas recentes</h2>
+            <button type="button" class="recent__clear" id="recent-clear">
+              Limpar
+            </button>
+          </div>
+          <div class="recent__chips" id="recent-chips"></div>
+        </section>
 
         <div
           class="results"

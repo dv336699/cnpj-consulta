@@ -1,6 +1,7 @@
 const API_BASE = "https://api.cnpj.pw";
 const THEME_KEY = "cnpj_theme";
-const PAGE_SIZE = 25;
+const HISTORY_KEY = "cnpj_history";
+const HISTORY_MAX = 24;
 const EMPTY = "—";
 
 const SITUACAO_LABEL = {
@@ -26,8 +27,6 @@ const ICONS = {
   activity: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M3 12.5h4l2-6 3 12 2.5-8 1.5 2H21" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   phone: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6.5 4h3l1.5 4-2 1.4a11 11 0 0 0 4.6 4.6L15.5 16l4 1.5v3a1.6 1.6 0 0 1-1.8 1.6C10.8 21.4 5 15.6 4.4 8.3A1.6 1.6 0 0 1 6 6.5" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/></svg>`,
   users: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="9" cy="8" r="3.2" stroke="currentColor" stroke-width="1.8"/><path d="M3.5 19a5.5 5.5 0 0 1 11 0M16 5.2a3.2 3.2 0 0 1 0 5.9M17.5 19a5.5 5.5 0 0 0-2.7-4.7" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
-  mail: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><rect x="3" y="5.5" width="18" height="13" rx="2.4" stroke="currentColor" stroke-width="1.8"/><path d="M4 7.5l8 5.2 8-5.2" stroke="currentColor" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
-  arrow: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M9 6l6 6-6 6" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"/></svg>`,
   alert: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 3.5 21 19H3L12 3.5Z" stroke="currentColor" stroke-width="1.8" stroke-linejoin="round"/><path d="M12 10v4" stroke="currentColor" stroke-width="1.9" stroke-linecap="round"/><circle cx="12" cy="16.6" r="1.05" fill="currentColor"/></svg>`,
   search: `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><circle cx="10.5" cy="10.5" r="6" stroke="currentColor" stroke-width="1.8"/><line x1="15" y1="15" x2="20" y2="20" stroke="currentColor" stroke-width="1.8" stroke-linecap="round"/></svg>`,
 };
@@ -57,12 +56,6 @@ function formatCnpj(value) {
     5,
     8
   )}/${digits.slice(8, 12)}-${digits.slice(12, 14)}`;
-}
-
-function formatCnpjBase(value) {
-  const digits = onlyDigits(value);
-  if (digits.length !== 8) return isBlank(value) ? EMPTY : String(value);
-  return `${digits.slice(0, 2)}.${digits.slice(2, 5)}.${digits.slice(5, 8)}`;
 }
 
 function formatCnae(value) {
@@ -281,16 +274,6 @@ function noticeError(message, title = "Não foi possível consultar") {
   return box;
 }
 
-function noticeEmpty(title, description) {
-  const box = el("div", { class: "notice notice--empty" });
-  box.append(svgIcon("search"));
-  box.append(el("div", { class: "notice__title", text: title }));
-  if (description) {
-    box.append(el("div", { class: "notice__text", text: description }));
-  }
-  return box;
-}
-
 function skeletonCard() {
   const card = el("div", {
     class: "skeleton-card",
@@ -308,20 +291,6 @@ function skeletonCard() {
   }
   card.append(grid);
   return card;
-}
-
-function skeletonList() {
-  const wrapper = el("div", {
-    class: "result-list",
-    attrs: { "aria-hidden": "true" },
-  });
-  for (let i = 0; i < 5; i += 1) {
-    const row = el("div", { class: "skeleton-card", attrs: { style: "padding:1rem 1.25rem" } });
-    row.append(el("div", { class: "sk sk--sub", attrs: { style: "margin-top:0" } }));
-    row.append(el("div", { class: "sk sk--line", attrs: { style: "margin-top:.6rem;width:35%" } }));
-    wrapper.append(row);
-  }
-  return wrapper;
 }
 
 /* --------------------------------------------------------------- network -- */
@@ -345,11 +314,6 @@ async function apiGet(path) {
 }
 
 const fetchCnpj = (cnpj) => apiGet(`/cnpj/${cnpj}`);
-const fetchBase = (base) => apiGet(`/cnpj_base/${base}`);
-const fetchByName = (name, cursor) => {
-  const query = cursor ? `?cursor=${encodeURIComponent(cursor)}` : "";
-  return apiGet(`/razao_social/${encodeURIComponent(name)}${query}`);
-};
 
 function errorMessageFor(status) {
   return (
@@ -664,100 +628,72 @@ function renderDetail(data) {
   return card;
 }
 
-/* ---------------------------------------------------------- name results -- */
+/* --------------------------------------------------------- recent history -- */
 
-const searchState = {
-  name: "",
-  cursor: null,
-  listNode: null,
-  moreWrap: null,
-};
-
-function resultRow(item) {
-  const base = onlyDigits(item.cnpj_base);
-  const row = el("button", {
-    class: "result-row",
-    attrs: { type: "button", "aria-label": `Ver detalhes de ${text(item.nome_empresarial)}` },
-  });
-
-  const body = el("div", { class: "result-row__body" });
-  body.append(
-    el("div", { class: "result-row__name", text: text(item.nome_empresarial) })
-  );
-  body.append(
-    el("div", {
-      class: "result-row__id",
-      text: `CNPJ base ${formatCnpjBase(base)}`,
-    })
-  );
-  row.append(body);
-
-  const go = el("span", { class: "result-row__go" });
-  go.append(svgIcon("arrow"));
-  row.append(go);
-
-  row.addEventListener("click", () => openFromBase(base, row));
-  return row;
-}
-
-function appendResultRows(items) {
-  for (const item of items) {
-    searchState.listNode.append(resultRow(item));
-  }
-  if (items.length > 0) {
-    searchState.cursor = onlyDigits(items[items.length - 1].cnpj_base);
-  }
-  const hasMore = items.length >= PAGE_SIZE;
-  if (!hasMore && searchState.moreWrap) {
-    searchState.moreWrap.remove();
-    searchState.moreWrap = null;
-  }
-}
-
-function renderNameResults(name, items) {
-  const container = el("div");
-  const count = items.length;
-  const plural = count === 1 ? "resultado" : "resultados";
-  const more = count >= PAGE_SIZE ? "+" : "";
-  container.append(
-    el("p", {
-      class: "result-summary",
-      text: `${count}${more} ${plural} para “${name}”`,
-    })
-  );
-
-  searchState.listNode = el("div", { class: "result-list" });
-  container.append(searchState.listNode);
-
-  searchState.moreWrap = el("div", { class: "load-more-wrap" });
-  const moreButton = el("button", { class: "load-more", attrs: { type: "button" } });
-  moreButton.append(document.createTextNode("Carregar mais"));
-  moreButton.addEventListener("click", () => loadMoreResults(moreButton));
-  searchState.moreWrap.append(moreButton);
-  container.append(searchState.moreWrap);
-
-  appendResultRows(items);
-  setResults(container);
-}
-
-async function loadMoreResults(button) {
-  button.disabled = true;
-  button.replaceChildren(
-    el("span", { class: "spinner", attrs: { style: "border-color:rgba(0,0,0,.2);border-top-color:currentColor" } }),
-    document.createTextNode("Carregando…")
-  );
+function loadHistory() {
   try {
-    const data = await fetchByName(searchState.name, searchState.cursor);
-    const items = data.resultados_paginacao || [];
-    appendResultRows(items);
-  } catch (error) {
-    const status = error instanceof ApiError ? error.status : 0;
-    showToast(errorMessageFor(status));
-  } finally {
-    if (button.isConnected) {
-      button.disabled = false;
-      button.replaceChildren(document.createTextNode("Carregar mais"));
+    const parsed = JSON.parse(localStorage.getItem(HISTORY_KEY) || "[]");
+    if (!Array.isArray(parsed)) return [];
+    return parsed.filter((entry) => entry && onlyDigits(entry.cnpj).length === 14);
+  } catch {
+    return [];
+  }
+}
+
+function persistHistory(entries) {
+  try {
+    localStorage.setItem(HISTORY_KEY, JSON.stringify(entries));
+  } catch {
+    /* storage blocked — history is best-effort */
+  }
+}
+
+function saveToHistory(cnpj, nome) {
+  const digits = onlyDigits(cnpj);
+  if (digits.length !== 14) return;
+  const entries = loadHistory().filter(
+    (entry) => onlyDigits(entry.cnpj) !== digits
+  );
+  entries.unshift({
+    cnpj: digits,
+    nome: isBlank(nome) ? "" : String(nome),
+    ts: Date.now(),
+  });
+  persistHistory(entries.slice(0, HISTORY_MAX));
+  renderRecent();
+}
+
+function clearHistory() {
+  persistHistory([]);
+  renderRecent();
+}
+
+function renderRecent() {
+  const entries = loadHistory();
+  refs.recentChips.replaceChildren();
+  if (entries.length === 0) {
+    refs.recent.hidden = true;
+    return;
+  }
+  refs.recent.hidden = false;
+
+  for (const entry of entries) {
+    const digits = onlyDigits(entry.cnpj);
+    const label = isBlank(entry.nome) ? formatCnpj(digits) : entry.nome;
+    const chip = el("button", {
+      class: "recent__chip",
+      attrs: { type: "button", "aria-label": `Consultar ${label}` },
+    });
+    if (!isBlank(entry.nome)) {
+      chip.append(el("span", { class: "recent__chip-name", text: entry.nome }));
     }
+    chip.append(el("span", { class: "recent__chip-cnpj", text: formatCnpj(digits) }));
+    chip.addEventListener("click", () => {
+      refs.cnpjInput.value = maskCnpj(digits);
+      clearFieldError(refs.cnpjError, refs.cnpjInput);
+      loadCnpj(digits, { button: refs.cnpjSubmit });
+    });
+    refs.recentChips.append(chip);
   }
 }
 
@@ -767,11 +703,6 @@ const detailCache = new Map();
 
 function setResults(node) {
   refs.results.replaceChildren(node);
-}
-
-function clearResults() {
-  refs.results.replaceChildren();
-  refs.results.setAttribute("aria-busy", "false");
 }
 
 function updateUrl(cnpj) {
@@ -810,6 +741,7 @@ async function loadCnpj(cnpj, { button } = {}) {
     }
     setResults(renderDetail(data));
     updateUrl(cnpj);
+    saveToHistory(cnpj, data.nome_empresarial);
   } catch (error) {
     const status = error instanceof ApiError ? error.status : 0;
     setResults(noticeError(errorMessageFor(status)));
@@ -819,52 +751,6 @@ async function loadCnpj(cnpj, { button } = {}) {
       setButtonLoading(button, false);
       button.replaceChildren(svgIcon("search"), document.createTextNode("Consultar"));
     }
-  }
-}
-
-async function openFromBase(base, row) {
-  row.classList.add("is-loading");
-  row.setAttribute("aria-busy", "true");
-  try {
-    const data = await fetchBase(base);
-    const items = data.resultados_paginacao || [];
-    const matriz = items.find((item) => item.cnpj_ordem === "0001") || items[0];
-    const cnpj = matriz ? onlyDigits(matriz.cnpj) : "";
-    if (cnpj.length !== 14) throw new ApiError(404);
-    await loadCnpj(cnpj);
-  } catch (error) {
-    const status = error instanceof ApiError ? error.status : 0;
-    setResults(noticeError(errorMessageFor(status)));
-  } finally {
-    row.classList.remove("is-loading");
-    row.removeAttribute("aria-busy");
-  }
-}
-
-async function runNameSearch(name) {
-  searchState.name = name;
-  searchState.cursor = null;
-  refs.results.setAttribute("aria-busy", "true");
-  setResults(skeletonList());
-
-  try {
-    const data = await fetchByName(name);
-    const items = data.resultados_paginacao || [];
-    if (items.length === 0) {
-      setResults(
-        noticeEmpty(
-          "Nenhum resultado encontrado",
-          `Não encontramos empresas começando com “${name}”.`
-        )
-      );
-      return;
-    }
-    renderNameResults(name, items);
-  } catch (error) {
-    const status = error instanceof ApiError ? error.status : 0;
-    setResults(noticeError(errorMessageFor(status)));
-  } finally {
-    refs.results.setAttribute("aria-busy", "false");
   }
 }
 
@@ -893,22 +779,6 @@ function setTheme(theme) {
   }
 }
 
-/* ---------------------------------------------------------------- tabs -- */
-
-function activateTab(mode, { focus = false } = {}) {
-  const isCnpj = mode === "cnpj";
-  refs.tabCnpj.setAttribute("aria-selected", String(isCnpj));
-  refs.tabName.setAttribute("aria-selected", String(!isCnpj));
-  refs.tabCnpj.tabIndex = isCnpj ? 0 : -1;
-  refs.tabName.tabIndex = isCnpj ? -1 : 0;
-  refs.panelCnpj.hidden = !isCnpj;
-  refs.panelName.hidden = isCnpj;
-  clearResults();
-  clearFieldError(refs.cnpjError, refs.cnpjInput);
-  clearFieldError(refs.nameError, refs.nameInput);
-  if (focus) (isCnpj ? refs.cnpjInput : refs.nameInput).focus();
-}
-
 /* ----------------------------------------------------------------- init -- */
 
 const refs = {};
@@ -917,35 +787,19 @@ function cacheRefs() {
   refs.results = document.getElementById("results");
   refs.toast = document.getElementById("toast");
   refs.themeToggle = document.getElementById("theme-toggle");
-  refs.tabCnpj = document.getElementById("tab-cnpj");
-  refs.tabName = document.getElementById("tab-name");
-  refs.panelCnpj = document.getElementById("panel-cnpj");
-  refs.panelName = document.getElementById("panel-name");
   refs.cnpjForm = document.getElementById("cnpj-form");
   refs.cnpjInput = document.getElementById("cnpj-input");
   refs.cnpjError = document.getElementById("cnpj-error");
   refs.cnpjSubmit = document.getElementById("cnpj-submit");
-  refs.nameForm = document.getElementById("name-form");
-  refs.nameInput = document.getElementById("name-input");
-  refs.nameError = document.getElementById("name-error");
+  refs.recent = document.getElementById("recent");
+  refs.recentChips = document.getElementById("recent-chips");
+  refs.recentClear = document.getElementById("recent-clear");
 }
 
 function bindEvents() {
   refs.themeToggle.addEventListener("click", () => {
     const current = document.documentElement.getAttribute("data-theme");
     setTheme(current === "dark" ? "light" : "dark");
-  });
-
-  refs.tabCnpj.addEventListener("click", () => activateTab("cnpj", { focus: true }));
-  refs.tabName.addEventListener("click", () => activateTab("name", { focus: true }));
-
-  const tablist = [refs.tabCnpj, refs.tabName];
-  tablist.forEach((tab, index) => {
-    tab.addEventListener("keydown", (event) => {
-      if (event.key !== "ArrowRight" && event.key !== "ArrowLeft") return;
-      event.preventDefault();
-      activateTab(index === 0 ? "name" : "cnpj", { focus: true });
-    });
   });
 
   refs.cnpjInput.addEventListener("input", () => {
@@ -976,22 +830,7 @@ function bindEvents() {
     loadCnpj(digits, { button: refs.cnpjSubmit });
   });
 
-  refs.nameInput.addEventListener("input", () => {
-    if (refs.nameInput.classList.contains("is-invalid")) {
-      clearFieldError(refs.nameError, refs.nameInput);
-    }
-  });
-
-  refs.nameForm.addEventListener("submit", (event) => {
-    event.preventDefault();
-    const name = refs.nameInput.value.trim();
-    clearFieldError(refs.nameError, refs.nameInput);
-    if (name.length < 2) {
-      setFieldError(refs.nameError, refs.nameInput, "Digite ao menos 2 caracteres.");
-      return;
-    }
-    runNameSearch(name);
-  });
+  refs.recentClear.addEventListener("click", clearHistory);
 }
 
 function handleDeepLink() {
@@ -1007,6 +846,7 @@ function handleDeepLink() {
 function init() {
   cacheRefs();
   bindEvents();
+  renderRecent();
   handleDeepLink();
 }
 
