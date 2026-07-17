@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="pt-BR" data-theme="light">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Consulta CNPJ — dados públicos da Receita Federal</title>
+    <meta
+      name="description"
+      content="Consulte CNPJ e busque empresas por razão social de forma rápida, limpa e sem anúncios. Dados públicos via cnpj.pw."
+    />
+    <meta name="color-scheme" content="light dark" />
+    <meta name="theme-color" content="#2563eb" />
+
+    <!-- Set theme before paint to avoid a flash of the wrong theme -->
+    <script>
+      (() => {
+        let theme = "light";
+        try {
+          const saved = localStorage.getItem("cnpj_theme");
+          if (saved === "light" || saved === "dark") {
+            theme = saved;
+          } else if (window.matchMedia("(prefers-color-scheme: dark)").matches) {
+            theme = "dark";
+          }
+        } catch {}
+        document.documentElement.setAttribute("data-theme", theme);
+      })();
+    </script>
+
+    <link
+      rel="icon"
+      href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Crect width='32' height='32' rx='8' fill='%232563eb'/%3E%3Ccircle cx='14' cy='13' r='6' fill='none' stroke='white' stroke-width='2.6'/%3E%3Cline x1='18.4' y1='17.4' x2='23' y2='22' stroke='white' stroke-width='2.6' stroke-linecap='round'/%3E%3C/svg%3E"
+    />
+
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link
+      rel="stylesheet"
+      href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap"
+    />
+    <link rel="stylesheet" href="assets/styles.css" />
+  </head>
+  <body>
+    <header class="app-header">
+      <div class="wrap app-header__inner">
+        <div class="brand">
+          <span class="brand__mark" aria-hidden="true">
+            <svg viewBox="0 0 24 24" fill="none" width="20" height="20" role="img" aria-label="Consulta CNPJ"><title>Consulta CNPJ</title>
+              <circle
+                cx="10.5"
+                cy="10.5"
+                r="6"
+                stroke="currentColor"
+                stroke-width="2.2"
+              />
+              <line
+                x1="15"
+                y1="15"
+                x2="20"
+                y2="20"
+                stroke="currentColor"
+                stroke-width="2.2"
+                stroke-linecap="round"
+              />
+            </svg>
+          </span>
+          <span class="brand__text">
+            <span class="brand__title">Consulta CNPJ</span>
+            <span class="brand__tagline">Dados públicos, sem anúncios</span>
+          </span>
+        </div>
+
+        <span class="header__spacer"></span>
+
+        <button
+          type="button"
+          id="theme-toggle"
+          class="theme-toggle"
+          aria-label="Alternar tema claro e escuro"
+        >
+          <svg
+            class="icon-moon"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <path
+              d="M21 12.8A9 9 0 1 1 11.2 3a7 7 0 0 0 9.8 9.8Z"
+              stroke="currentColor"
+              stroke-width="1.9"
+              stroke-linejoin="round"
+            />
+          </svg>
+          <svg
+            class="icon-sun"
+            viewBox="0 0 24 24"
+            fill="none"
+            aria-hidden="true"
+          >
+            <circle cx="12" cy="12" r="4.2" stroke="currentColor" stroke-width="1.9" />
+            <path
+              d="M12 2.5v2.2M12 19.3v2.2M4.6 4.6l1.6 1.6M17.8 17.8l1.6 1.6M2.5 12h2.2M19.3 12h2.2M4.6 19.4l1.6-1.6M17.8 6.2l1.6-1.6"
+              stroke="currentColor"
+              stroke-width="1.9"
+              stroke-linecap="round"
+            />
+          </svg>
+        </button>
+      </div>
+    </header>
+
+    <main>
+      <section class="wrap hero">
+        <h1 class="hero__title">Consulte qualquer empresa do Brasil</h1>
+        <p class="hero__subtitle">
+          Busque por CNPJ ou razão social e veja os dados cadastrais completos,
+          direto da base pública da Receita Federal.
+        </p>
+
+        <div class="tabs" role="tablist" aria-label="Modo de consulta">
+          <button
+            type="button"
+            class="tab"
+            id="tab-cnpj"
+            role="tab"
+            aria-selected="true"
+            aria-controls="panel-cnpj"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <rect
+                x="3.5"
+                y="4.5"
+                width="17"
+                height="15"
+                rx="2"
+                stroke="currentColor"
+                stroke-width="1.8"
+              />
+              <path
+                d="M7 9h6M7 13h10M7 16.5h4"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+            </svg>
+            Consultar CNPJ
+          </button>
+          <button
+            type="button"
+            class="tab"
+            id="tab-name"
+            role="tab"
+            aria-selected="false"
+            aria-controls="panel-name"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <circle cx="10.5" cy="10.5" r="6" stroke="currentColor" stroke-width="1.8" />
+              <line
+                x1="15"
+                y1="15"
+                x2="20"
+                y2="20"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+              />
+            </svg>
+            Buscar por nome
+          </button>
+        </div>
+      </section>
+
+      <section class="wrap">
+        <!-- Mode A: CNPJ lookup -->
+        <div
+          class="panel"
+          id="panel-cnpj"
+          role="tabpanel"
+          aria-labelledby="tab-cnpj"
+        >
+          <form class="search" id="cnpj-form" novalidate>
+            <div class="search__row">
+              <div class="field">
+                <label class="sr-only" for="cnpj-input">Número do CNPJ</label>
+                <input
+                  class="input"
+                  id="cnpj-input"
+                  type="text"
+                  inputmode="numeric"
+                  autocomplete="off"
+                  spellcheck="false"
+                  placeholder="00.000.000/0000-00"
+                  maxlength="18"
+                  aria-describedby="cnpj-error"
+                />
+              </div>
+              <button class="btn" type="submit" id="cnpj-submit">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="10.5" cy="10.5" r="6" stroke="currentColor" stroke-width="2" />
+                  <line
+                    x1="15"
+                    y1="15"
+                    x2="20"
+                    y2="20"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                Consultar
+              </button>
+            </div>
+            <p class="field-error" id="cnpj-error" aria-live="polite"></p>
+          </form>
+        </div>
+
+        <!-- Mode B: name search -->
+        <div
+          class="panel"
+          id="panel-name"
+          role="tabpanel"
+          aria-labelledby="tab-name"
+          hidden
+        >
+          <form class="search" id="name-form" novalidate>
+            <div class="search__row">
+              <div class="field">
+                <label class="sr-only" for="name-input">Razão social</label>
+                <input
+                  class="input"
+                  id="name-input"
+                  type="text"
+                  autocomplete="off"
+                  spellcheck="false"
+                  placeholder="Ex.: Banco do Brasil"
+                  maxlength="120"
+                  aria-describedby="name-error"
+                />
+              </div>
+              <button class="btn" type="submit" id="name-submit">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+                  <circle cx="10.5" cy="10.5" r="6" stroke="currentColor" stroke-width="2" />
+                  <line
+                    x1="15"
+                    y1="15"
+                    x2="20"
+                    y2="20"
+                    stroke="currentColor"
+                    stroke-width="2"
+                    stroke-linecap="round"
+                  />
+                </svg>
+                Buscar
+              </button>
+            </div>
+            <p class="field-error" id="name-error" aria-live="polite"></p>
+          </form>
+        </div>
+
+        <div
+          class="results"
+          id="results"
+          aria-live="polite"
+          aria-busy="false"
+        ></div>
+      </section>
+    </main>
+
+    <footer class="app-footer">
+      <div class="wrap app-footer__inner">
+        <p class="footer-credit">
+          Dados via
+          <a href="https://cnpj.pw" target="_blank" rel="noopener noreferrer"
+            >cnpj.pw</a
+          >
+        </p>
+        <p class="footer-note">
+          Fonte primária: Receita Federal (dados públicos). Este é um front-end
+          independente, sem anúncios e sem vínculo oficial.
+        </p>
+        <div class="footer-links">
+          <a
+            href="https://api.cnpj.pw/docs"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true">
+              <path
+                d="M14 3h7v7M21 3l-9 9M19 14v5a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2h5"
+                stroke="currentColor"
+                stroke-width="1.8"
+                stroke-linecap="round"
+                stroke-linejoin="round"
+              />
+            </svg>
+            Documentação da API
+          </a>
+          <a
+            href="https://github.com/cnpjpw/cnpjpw"
+            target="_blank"
+            rel="noopener noreferrer"
+          >
+            <svg viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+              <path
+                d="M12 2C6.48 2 2 6.58 2 12.25c0 4.53 2.87 8.37 6.84 9.73.5.1.68-.22.68-.49 0-.24-.01-.87-.01-1.71-2.78.62-3.37-1.37-3.37-1.37-.45-1.18-1.11-1.5-1.11-1.5-.91-.63.07-.62.07-.62 1 .07 1.53 1.06 1.53 1.06.89 1.56 2.34 1.11 2.91.85.09-.66.35-1.11.63-1.37-2.22-.26-4.56-1.14-4.56-5.07 0-1.12.39-2.03 1.03-2.75-.1-.26-.45-1.3.1-2.71 0 0 .84-.28 2.75 1.05a9.34 9.34 0 0 1 5 0c1.91-1.33 2.75-1.05 2.75-1.05.55 1.41.2 2.45.1 2.71.64.72 1.03 1.63 1.03 2.75 0 3.94-2.34 4.81-4.57 5.06.36.32.68.94.68 1.9 0 1.37-.01 2.47-.01 2.81 0 .27.18.6.69.49A10.02 10.02 0 0 0 22 12.25C22 6.58 17.52 2 12 2Z"
+              />
+            </svg>
+            Repositório
+          </a>
+        </div>
+      </div>
+    </footer>
+
+    <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+    <script src="assets/app.js"></script>
+  </body>
+</html>
